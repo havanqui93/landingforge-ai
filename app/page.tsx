@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Container, Reveal } from "@/components/primitives";
 import { IndexGrid } from "@/components/IndexGrid";
-import { landings } from "@/lib/registry";
+import { landings, type RegistryEntry } from "@/lib/registry";
+import { getStoredLandings } from "@/lib/store";
 
 export const metadata: Metadata = {
   title: "LandingForge — many landings, one project",
@@ -9,7 +10,21 @@ export const metadata: Metadata = {
     "A config-driven platform for hosting many independent, premium landing pages.",
 };
 
-export default function HomePage() {
+// Always read the latest set of generated landings from the store at request time.
+export const dynamic = "force-dynamic";
+
+/** Merge file-based landings with store-backed ones (newest first), deduped. */
+async function getAllEntries(): Promise<RegistryEntry[]> {
+  const stored = await getStoredLandings();
+  const seen = new Set(landings.map((l) => l.slug));
+  const storedEntries: RegistryEntry[] = stored
+    .filter((config) => !seen.has(config.meta.slug))
+    .map((config) => ({ slug: config.meta.slug, config }));
+  return [...storedEntries, ...landings];
+}
+
+export default async function HomePage() {
+  const entries = await getAllEntries();
   return (
     <main className="relative min-h-screen overflow-hidden pb-24">
       <div aria-hidden className="pointer-events-none absolute inset-0 lf-glow" />
@@ -38,10 +53,10 @@ export default function HomePage() {
         <Container>
           <Reveal className="mb-8 flex items-baseline justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">
-              All landings · {landings.length}
+              All landings · {entries.length}
             </h2>
           </Reveal>
-          <IndexGrid entries={landings} />
+          <IndexGrid entries={entries} />
         </Container>
       </section>
     </main>
