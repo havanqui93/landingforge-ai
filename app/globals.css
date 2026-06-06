@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/*  CSS-variable theme contract                                        */
+/*  Each landing overrides these via <ThemeProvider> inline style.     */
+/*  Defaults below = the LandingForge directory (dark) theme.          */
+/* ------------------------------------------------------------------ */
+:root {
+  --lf-primary: 99 102 241;
+  --lf-primary-fg: 255 255 255;
+  --lf-bg: 8 8 20;
+  --lf-surface: 22 22 38;
+  --lf-fg: 237 237 245;
+  --lf-muted: 148 148 170;
+  --lf-border: 42 42 64;
+  --lf-radius: 0.85rem;
+  --lf-font: "Inter", system-ui, sans-serif;
+}
+
+* {
+  border-color: rgb(var(--lf-border));
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: rgb(var(--lf-bg));
+  color: rgb(var(--lf-fg));
+  font-family: var(--lf-font);
+}
+
+/* Accessible focus ring driven by theme primary. */
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid rgb(var(--lf-primary));
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Respect reduced-motion globally as a hard floor (components also gate JS). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  /* Soft radial glow used behind hero / CTA. */
+  .lf-glow {
+    background: radial-gradient(
+      60% 60% at 50% 0%,
+      rgb(var(--lf-primary) / 0.18),
+      transparent 70%
+    );
+  }
+  .lf-grid-mask {
+    -webkit-mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent);
+    mask-image: radial-gradient(70% 60% at 50% 0%, black, transparent);
+  }
+  /* Tasteful glass surface. */
+  .lf-glass {
+    background: rgb(var(--lf-surface) / 0.6);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+  }
+  .lf-gradient-text {
+    background: linear-gradient(
+      120deg,
+      rgb(var(--lf-fg)),
+      rgb(var(--lf-primary))
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
