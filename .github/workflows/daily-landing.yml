@@ -1,0 +1,67 @@
+name: Daily landing page
+
+# Generates one fresh, news-themed landing page every morning, verifies it
+# builds, then commits & pushes it (which auto-deploys if a host is connected).
+#
+# Schedule is in UTC. 00:00 UTC == 07:00 ICT (UTC+7). Shift the cron to change
+# the local time it runs (e.g. "0 22 * * *" == 07:00 JST / UTC+9).
+#
+# Requires repo secret ANTHROPIC_API_KEY (Settings → Secrets and variables →
+# Actions). You can also trigger it manually via "Run workflow".
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 07:00 ICT (UTC+7) daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-landing
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate today's landing page
+        uses: anthropics/claude-code-action@v1
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        with:
+          prompt: "/daily-landing"
+          claude_args: >-
+            --max-turns 40
+            --allowedTools WebSearch,WebFetch,Read,Write,Edit,Glob,Grep,Bash,Agent
+
+      - name: Verify build
+        run: |
+          npm run typecheck
+          npm run build
+
+      - name: Commit & push new landing
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No new landing was generated; nothing to commit."
+            exit 0
+          fi
+          git config user.name "landingforge-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat(landing): daily news landing for $(date -u +%F)"
+          git push
