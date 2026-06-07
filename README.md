@@ -10,6 +10,10 @@ ever touching the existing ones.
 - **Lucide React** icons
 - Honors `prefers-reduced-motion`, animates only `transform`/`opacity` (60fps)
 
+> **TrendPage AI** — an AI SEO landing-page generator (keyword → AI content →
+> Postgres → `/trends/[slug]`) lives alongside LandingForge in this app.
+> See [`TRENDPAGE.md`](./TRENDPAGE.md).
+
 ## Quick start
 
 ```bash
