@@ -25,6 +25,13 @@ npm run typecheck   # strict TS, exhaustive section renderer
 npm run build       # static pre-render of every registered landing
 ```
 
+## Deploy & daily automation
+
+A **Vercel Cron** job generates a fresh, news-themed landing page every morning
+(see `vercel.json`, `app/api/cron/daily-landing`, and `lib/generate-landing.ts`).
+See **[DEPLOY.md](./DEPLOY.md)** for the one-time Vercel + KV setup.
+
+
 ## How it works
 
 ```
