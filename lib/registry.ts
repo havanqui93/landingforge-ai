@@ -13,6 +13,7 @@
 import type { LandingConfig } from "./landing.types";
 import demo from "@/landings/demo/config";
 import photonicAi20260606 from "@/landings/2026-06-06-photonic-ai/config";
+import vang from "@/landings/vang/config";
 
 export interface RegistryEntry {
   slug: string;
@@ -22,6 +23,7 @@ export interface RegistryEntry {
 export const landings: RegistryEntry[] = [
   { slug: demo.meta.slug, config: demo },
   { slug: photonicAi20260606.meta.slug, config: photonicAi20260606 },
+  { slug: vang.meta.slug, config: vang },
   // 👇 add new landings here, e.g.  { slug: acme.meta.slug, config: acme },
 ];
 
