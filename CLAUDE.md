@@ -102,41 +102,55 @@ interface LandingConfig {
 
 ## Daily automation (the core workflow)
 
-Every morning a scheduled job generates a fresh, news-themed landing page:
+Every morning a **Vercel Cron** job generates a fresh, news-themed landing
+page. There is no LLM and no GitHub commit in the loop — it's fully
+Vercel-native. Because serverless functions can't write files into the deployed
+bundle, generated landings are stored in **Vercel KV** and rendered
+dynamically, *alongside* the static, file-based landings in `lib/registry.ts`.
 
-- **Schedule:** `.github/workflows/daily-landing.yml`, cron at **07:00 ICT
-  (UTC+7) → `0 0 * * *` UTC**. Change the cron to shift the timezone. Also
-  runnable on demand via "Run workflow" (workflow_dispatch).
-- **The procedure** the agent follows lives in
-  `.claude/commands/daily-landing.md` (invoke with `/daily-landing`).
-- **The generator** is the `landing-builder` subagent
-  (`.claude/agents/landing-builder.md`), which turns a news brief into a
-  `LandingConfig`.
+Moving parts:
 
-High level, each run:
-1. Fetches today's notable news (WebSearch/WebFetch) and picks one compelling,
-   non-sensitive story to theme a **fictional product/campaign** landing around.
-2. Generates `landings/<YYYY-MM-DD-slug>/config.ts` with a unique theme.
-3. Registers it in `lib/registry.ts`.
-4. Runs `npm run typecheck` + `npm run build`; fixes any issues.
-5. Commits and pushes (which auto-deploys if a host like Vercel is connected).
+- **Schedule:** `vercel.json` → `crons`, at **07:00 ICT (UTC+7) → `0 0 * * *`
+  UTC** (Vercel cron times are UTC). Change the cron to shift the timezone.
+- **The job:** `app/api/cron/daily-landing/route.ts` (a `GET` route).
+- **News source:** `lib/news.ts` — top non-sensitive Hacker News story via the
+  free Algolia API (no key).
+- **Generator:** `lib/generate-landing.ts` — deterministic, templated
+  `LandingConfig` for a **fictional product** themed by the headline (palette,
+  name, and copy all derived from a hash of the title).
+- **Store:** `lib/store.ts` — Vercel KV read/write; degrades to a no-op when KV
+  env vars are absent, so local dev and builds still work off the static
+  registry.
+
+Each run:
+1. `fetchTopStory()` picks one compelling, non-sensitive HN story.
+2. `generateLanding()` builds a `LandingConfig` with a `YYYY-MM-DD-...` slug and
+   a unique theme.
+3. `saveStoredLanding()` writes it to KV; it's instantly live at `/l/<slug>` and
+   on the index `/` (both read the store at request time).
+
+Trigger manually with `GET /api/cron/daily-landing` (send
+`Authorization: Bearer $CRON_SECRET` if that env var is set).
 
 ### Editorial guardrails for generated pages
 
 - Theme around the news, but **market a fictional product/initiative** — do not
   impersonate real companies, people, or publications, and don't reproduce
-  article text. Treat news as *inspiration*, not content to copy.
-- **Avoid sensitive/tragic topics** (death, disaster, violence, politics-as-
-  outrage, medical claims). If the top story is sensitive, pick a lighter angle
-  (tech, science, culture, sports, business, product launches).
-- Keep copy original, upbeat, and benefit-led. No real prices, no real claims.
-- One landing per day; never overwrite or modify previous days' landings.
+  article text. The headline is *inspiration* only (the generator derives a
+  palette + keywords from it; it never copies article body text).
+- **Avoid sensitive/tragic topics.** `lib/news.ts` filters a keyword blocklist
+  (death, disaster, violence, politics, medical claims, etc.). Extend the list
+  there if needed.
+- Keep copy original, upbeat, and benefit-led. Prices/stats are clearly
+  fictional demo values.
 
 ## Setup required for automation to run
 
-- Add repo secret **`ANTHROPIC_API_KEY`** (Settings → Secrets and variables →
-  Actions). The workflow needs it to run Claude Code.
-- The workflow needs `contents: write` permission (already set in the YAML) to
-  commit the new landing.
-- Optional: connect the repo to Vercel (or similar) so each pushed commit
-  deploys automatically.
+- **Add a Vercel KV store** to the project (Vercel dashboard → Storage). This
+  injects `KV_REST_API_URL` and `KV_REST_API_TOKEN` env vars the job uses.
+- **Deploy to Vercel.** Cron jobs only run on deployed Vercel projects (and only
+  on production). The schedule comes from `vercel.json`.
+- **Optional `CRON_SECRET`** env var — when set, the route requires Vercel's
+  Bearer token, blocking unauthenticated calls.
+- Note: on the Vercel **Hobby** plan, crons run at most once per day and the
+  exact minute is best-effort; a daily schedule is fine.
