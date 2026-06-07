@@ -63,6 +63,10 @@ interface LandingConfig {
 }
 ```
 
+> 📐 For the full end-to-end flow — the two landing sources (static registry vs.
+> Vercel KV), the render pipeline, request flows, and the daily-automation core
+> process — see **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**.
+
 `LandingRenderer` switches on `section.type` and renders the matching
 component. The `switch` is **exhaustive** — a `never` branch makes the build
 fail if you add a union member without handling it.
