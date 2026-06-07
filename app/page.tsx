@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Container, Reveal } from "@/components/primitives";
 import { IndexGrid } from "@/components/IndexGrid";
+import { GenerateForm } from "@/components/GenerateForm";
 import { landings, type RegistryEntry } from "@/lib/registry";
 import { getStoredLandings } from "@/lib/store";
 
@@ -45,6 +46,7 @@ export default async function HomePage() {
               its own theme, its own sections, its own animations. Add a new one
               without ever touching the others.
             </p>
+            <GenerateForm />
           </Reveal>
         </Container>
       </header>
