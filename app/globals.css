@@ -345,6 +345,149 @@ body {
   .tp-mobile-cards   { display: flex !important; }
 }
 
+/* ================================================================
+   Forge UI — shared design-system utilities
+================================================================ */
+
+/* Badges */
+.forge-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.forge-badge-success { background: rgba(5,150,105,.12);  color: #059669; border: 1px solid rgba(5,150,105,.2); }
+.forge-badge-warning { background: rgba(217,119,6,.12);  color: #D97706; border: 1px solid rgba(217,119,6,.2); }
+.forge-badge-primary { background: rgba(99,102,241,.12); color: #6366F1; border: 1px solid rgba(99,102,241,.2); }
+.forge-badge-purple  { background: rgba(139,92,246,.12); color: #8B5CF6; border: 1px solid rgba(139,92,246,.2); }
+.forge-badge-muted   { background: rgba(148,148,170,.08); color: #9494AA; border: 1px solid rgba(148,148,170,.15); }
+.forge-badge-danger  { background: rgba(220,38,38,.12);  color: #DC2626; border: 1px solid rgba(220,38,38,.2); }
+
+/* Strength meter */
+.forge-strength-seg {
+  flex: 1;
+  height: 3px;
+  background: rgba(42,42,64,1);
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+.forge-strength-seg.weak   { background: #DC2626; }
+.forge-strength-seg.fair   { background: #D97706; }
+.forge-strength-seg.good   { background: #6366F1; }
+.forge-strength-seg.strong { background: #059669; }
+
+/* Eyebrow pill */
+.forge-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(99,102,241,.08);
+  border: 1px solid rgba(99,102,241,.25);
+  color: #6366F1;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 16px;
+  border-radius: 9999px;
+}
+
+/* Sidebar nav item active */
+.forge-nav-active {
+  background: rgba(99,102,241,.10) !important;
+  color: #6366F1 !important;
+}
+
+/* Admin progress step */
+.forge-step-done    { background: rgba(5,150,105,.12); }
+.forge-step-active  { background: rgba(99,102,241,.10); }
+.forge-step-pending { background: rgba(42,42,64,.8); }
+
+/* Animated indigo progress bar */
+@keyframes forge-bar {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.forge-progress-anim::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,.5), transparent);
+  animation: forge-bar 1.4s ease-in-out infinite;
+}
+
+/* Dot-grid background for auth pages */
+.forge-dot-grid {
+  background-image: radial-gradient(rgba(42,42,64,.8) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Divider with text */
+.forge-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgb(var(--lf-muted));
+  font-size: 12px;
+}
+.forge-divider::before,
+.forge-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--lf-border));
+}
+
+/* Toggle */
+.forge-toggle-track {
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--lf-border));
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.forge-toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.forge-toggle-checked { background: #6366F1 !important; }
+.forge-toggle-checked::after { transform: translateX(18px); }
+
+/* Skeleton shimmer */
+.forge-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--lf-surface)) 25%,
+    rgba(40,40,70,.5) 50%,
+    rgb(var(--lf-surface)) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+/* Card animations */
+@keyframes forge-card-in {
+  from { opacity: 0; transform: translateY(12px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.forge-card-in { animation: forge-card-in 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+
 @layer utilities {
   /* Soft radial glow used behind hero / CTA. */
   .lf-glow {

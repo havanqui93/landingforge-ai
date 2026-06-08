@@ -17,9 +17,14 @@ const config: Config = {
         fg: "rgb(var(--lf-fg) / <alpha-value>)",
         muted: "rgb(var(--lf-muted) / <alpha-value>)",
         border: "rgb(var(--lf-border) / <alpha-value>)",
+        // Forge semantic colors (fixed, not per-landing)
+        success: "#059669",
+        warning: "#D97706",
+        danger: "#DC2626",
       },
       fontFamily: {
-        sans: ["var(--lf-font)", "system-ui", "sans-serif"],
+        sans: ["var(--font-inter)", "var(--lf-font)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "monospace"],
       },
       borderRadius: {
         xl: "var(--lf-radius)",
@@ -30,6 +35,29 @@ const config: Config = {
       },
       transitionTimingFunction: {
         expo: "cubic-bezier(0.22, 1, 0.36, 1)",
+      },
+      keyframes: {
+        "toast-in": {
+          from: { opacity: "0", transform: "translateX(20px)" },
+          to: { opacity: "1", transform: "translateX(0)" },
+        },
+        "page-in": {
+          from: { opacity: "0", transform: "translateY(6px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-400px 0" },
+          "100%": { backgroundPosition: "400px 0" },
+        },
+        "spin-slow": {
+          to: { transform: "rotate(360deg)" },
+        },
+      },
+      animation: {
+        "toast-in": "toast-in 0.3s cubic-bezier(0.22,1,0.36,1) both",
+        "page-in": "page-in 0.25s ease-out both",
+        shimmer: "shimmer 1.5s infinite linear",
+        "spin-slow": "spin-slow 0.6s linear infinite",
       },
     },
   },

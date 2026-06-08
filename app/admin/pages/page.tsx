@@ -1,53 +1,55 @@
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { PageList, type PageRow } from "@/components/admin/PageList";
+import { landings, type RegistryEntry } from "@/lib/registry";
+import { getStoredLandings } from "@/lib/store";
+import { PagesTableUI, type AdminPage } from "@/components/admin/PagesTableUI";
+import type { LandingConfig } from "@/lib/landing.types";
 
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function AdminPagesList() {
-  let rows: PageRow[] = [];
-  let dbError: string | null = null;
+function detectSource(slug: string): AdminPage["source"] {
+  if (/^\d{4}-\d{2}-\d{2}/.test(slug)) return "cron";
+  return "manual";
+}
 
-  try {
-    const pages = await prisma.landingPage.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        keyword: true,
-        slug: true,
-        status: true,
-        createdAt: true,
-      },
-    });
-    rows = pages.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() }));
-  } catch (err) {
-    dbError =
-      err instanceof Error ? err.message : "Could not connect to the database";
-  }
+function extractDate(slug: string): string {
+  const match = slug.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] ?? "—";
+}
 
-  return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Pages</h1>
-        <Link
-          href="/admin/generate"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-        >
-          + Generate
-        </Link>
-      </div>
-      <div className="mt-8">
-        {dbError ? (
-          <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            Database unavailable: {dbError}. Set <code>DATABASE_URL</code> and run{" "}
-            <code>npm run db:push</code>.
-          </p>
-        ) : (
-          <PageList pages={rows} />
-        )}
-      </div>
-    </div>
+function toAdminPage(
+  slug: string,
+  config: LandingConfig,
+  source: AdminPage["source"],
+): AdminPage {
+  return {
+    slug,
+    title: config.meta.title,
+    description: config.meta.description,
+    source,
+    status: "published",
+    category: "product",
+    sections: config.sections.map((s) => s.type),
+    createdAt: extractDate(slug),
+  };
+}
+
+async function getAllAdminPages(): Promise<AdminPage[]> {
+  const stored = await getStoredLandings();
+  const seen = new Set(landings.map((l) => l.slug));
+
+  const storedPages: AdminPage[] = stored
+    .filter((config) => !seen.has(config.meta.slug))
+    .map((config) =>
+      toAdminPage(config.meta.slug, config, detectSource(config.meta.slug)),
+    );
+
+  const registryPages: AdminPage[] = landings.map(({ slug, config }) =>
+    toAdminPage(slug, config, "manual"),
   );
+
+  return [...storedPages, ...registryPages];
+}
+
+export default async function AdminPagesPage() {
+  const pages = await getAllAdminPages();
+  return <PagesTableUI initialPages={pages} />;
 }
