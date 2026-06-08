@@ -13,6 +13,7 @@
 # misc
 .DS_Store
 *.pem
+.landingforge-store/
 
 # debug
 npm-debug.log*

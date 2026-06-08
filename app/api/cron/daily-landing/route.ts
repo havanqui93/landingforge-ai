@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchTopStory } from "@/lib/news";
-import { generateLanding } from "@/lib/generate-landing";
+import { generateLandingFromKeyword } from "@/lib/ai-generate-landing";
 import {
   isStoreEnabled,
   saveStoredLanding,
@@ -19,7 +19,7 @@ import {
  */
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function GET(request: Request): Promise<NextResponse> {
   // Verify the Vercel Cron secret if one is configured.
@@ -51,7 +51,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     }
 
     const dateISO = new Date().toISOString().slice(0, 10);
-    let config = generateLanding(story, { dateISO });
+    let config = await generateLandingFromKeyword(story.title, dateISO);
 
     // Avoid clobbering an existing slug if the job runs more than once a day.
     if (await storedLandingExists(config.meta.slug)) {

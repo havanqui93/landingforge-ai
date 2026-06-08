@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateLanding } from "@/lib/generate-landing";
+import { generateLandingFromKeyword } from "@/lib/ai-generate-landing";
 import {
   isStoreEnabled,
   saveStoredLanding,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const dateISO = new Date().toISOString().slice(0, 10);
-    let config = generateLanding({ title: keyword, points: 0 }, { dateISO });
+    let config = await generateLandingFromKeyword(keyword, dateISO);
 
     if (await storedLandingExists(config.meta.slug)) {
       config = {
