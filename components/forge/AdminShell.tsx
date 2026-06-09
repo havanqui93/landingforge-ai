@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
 const navItems = [
@@ -34,7 +35,7 @@ function useActiveNav(href: string, exact = false) {
 interface NavItemProps {
   href: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   exact?: boolean;
   onClick?: () => void;
 }
