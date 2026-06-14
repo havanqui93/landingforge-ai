@@ -1,4 +1,6 @@
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { LandingErrorBoundary } from "@/components/LandingErrorBoundary";
+import { LandingNav } from "@/components/sections/LandingNav";
 import { Hero } from "@/components/sections/Hero";
 import { Features } from "@/components/sections/Features";
 import { Stats } from "@/components/sections/Stats";
@@ -7,7 +9,7 @@ import { Pricing } from "@/components/sections/Pricing";
 import { FAQ } from "@/components/sections/FAQ";
 import { CTA } from "@/components/sections/CTA";
 import { Footer } from "@/components/sections/Footer";
-import type { LandingConfig, Section } from "@/lib/landing.types";
+import type { LandingConfig, Section, FooterSection } from "@/lib/landing.types";
 
 /**
  * Maps each section variant to its component. The `switch` is exhaustive:
@@ -40,9 +42,19 @@ function renderSection(section: Section, index: number) {
 }
 
 export function LandingRenderer({ config }: { config: LandingConfig }) {
+  const footerSection = config.sections.find(
+    (s): s is FooterSection => s.type === "footer",
+  );
+  const brand =
+    footerSection?.brand ??
+    (config.meta.title.split(" — ")[0]?.trim() || config.meta.title);
+
   return (
-    <ThemeProvider theme={config.theme}>
-      <main>{config.sections.map(renderSection)}</main>
-    </ThemeProvider>
+    <LandingErrorBoundary>
+      <ThemeProvider theme={config.theme}>
+        <LandingNav brand={brand} />
+        <main>{config.sections.map(renderSection)}</main>
+      </ThemeProvider>
+    </LandingErrorBoundary>
   );
 }

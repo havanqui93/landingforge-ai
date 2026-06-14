@@ -14,6 +14,8 @@ export type AdminPage = {
   category: string;
   sections: string[];
   createdAt: string;
+  /** false for registry (file-based) pages which cannot be deleted via API */
+  deletable: boolean;
 };
 
 type StatusFilter = "all" | "published" | "draft";
@@ -74,17 +76,51 @@ export function PagesTableUI({ initialPages }: { initialPages: AdminPage[] }) {
     });
   }
 
-  function deletePage(slug: string) {
-    setPages((prev) => prev.filter((p) => p.slug !== slug));
-    setSelected((prev) => { const n = new Set(prev); n.delete(slug); return n; });
-    toast(`Deleted /l/${slug}`, "success");
+  async function deletePage(slug: string) {
+    const page = pages.find((p) => p.slug === slug);
+    if (!page?.deletable) {
+      toast("Registry pages cannot be deleted via admin — remove them from lib/registry.ts", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/stored-landings/${slug}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(await res.text());
+      setPages((prev) => prev.filter((p) => p.slug !== slug));
+      setSelected((prev) => { const n = new Set(prev); n.delete(slug); return n; });
+      toast(`Deleted /l/${slug}`, "success");
+    } catch {
+      toast(`Failed to delete /l/${slug}`, "error");
+    }
   }
 
-  function bulkDelete() {
-    const count = selected.size;
-    setPages((prev) => prev.filter((p) => !selected.has(p.slug)));
+  async function bulkDelete() {
+    const toDelete = pages.filter((p) => selected.has(p.slug) && p.deletable);
+    const skipped = pages.filter((p) => selected.has(p.slug) && !p.deletable);
+
+    if (toDelete.length === 0) {
+      toast("Selected pages are registry pages and cannot be deleted", "error");
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      toDelete.map((p) => fetch(`/api/stored-landings/${p.slug}`, { method: "DELETE" }))
+    );
+
+    const deleted = toDelete.filter((_, i) => {
+      const r = results[i];
+      return r !== undefined && r.status === "fulfilled" && (r as PromiseFulfilledResult<Response>).value.ok;
+    });
+    const failed = toDelete.length - deleted.length;
+
+    const deletedSlugs = new Set(deleted.map((p) => p.slug));
+    setPages((prev) => prev.filter((p) => !deletedSlugs.has(p.slug)));
     setSelected(new Set());
-    toast(`Deleted ${count} page${count !== 1 ? "s" : ""}`, "success");
+
+    const parts: string[] = [];
+    if (deleted.length) parts.push(`Deleted ${deleted.length} page${deleted.length !== 1 ? "s" : ""}`);
+    if (skipped.length) parts.push(`${skipped.length} registry page${skipped.length !== 1 ? "s" : ""} skipped`);
+    if (failed) parts.push(`${failed} failed`);
+    toast(parts.join(" · "), deleted.length > 0 ? "success" : "error");
   }
 
   const sourceBadge = (source: AdminPage["source"]) => {
@@ -282,8 +318,9 @@ export function PagesTableUI({ initialPages }: { initialPages: AdminPage[] }) {
                       </a>
                       <button
                         onClick={() => deletePage(p.slug)}
-                        className="rounded-lg p-1.5 text-muted transition hover:bg-surface hover:text-danger"
-                        title="Delete"
+                        disabled={!p.deletable}
+                        className="rounded-lg p-1.5 text-muted transition hover:bg-surface hover:text-danger disabled:cursor-not-allowed disabled:opacity-30"
+                        title={p.deletable ? "Delete" : "Registry pages cannot be deleted via admin"}
                       >
                         <Trash2 size={13} />
                       </button>

@@ -17,7 +17,7 @@ export function FAQ({ data }: { data: FAQSection }) {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <SectionShell>
+    <SectionShell id="faq">
       <Container>
         <SectionHeading
           eyebrow={data.eyebrow}

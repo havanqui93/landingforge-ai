@@ -22,7 +22,7 @@ export function Features({ data }: { data: FeaturesSection }) {
   const cols = colsClass[data.columns ?? 3];
 
   return (
-    <SectionShell>
+    <SectionShell id="features">
       <Container>
         <SectionHeading
           eyebrow={data.eyebrow}

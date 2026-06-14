@@ -210,7 +210,7 @@ const vang: LandingConfig = {
           links: [
             { label: "Tính năng", href: "#features" },
             { label: "Bảng giá", href: "#pricing" },
-            { label: "Câu hỏi thường gặp", href: "#" },
+            { label: "Câu hỏi thường gặp", href: "#faq" },
           ],
         },
         {
@@ -224,8 +224,8 @@ const vang: LandingConfig = {
         {
           heading: "Pháp lý",
           links: [
-            { label: "Chính sách bảo mật", href: "#" },
-            { label: "Điều khoản dịch vụ", href: "#" },
+            { label: "Chính sách bảo mật", href: "/privacy" },
+            { label: "Điều khoản dịch vụ", href: "/terms" },
           ],
         },
       ],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   motion,
   useReducedMotion,
@@ -24,7 +24,12 @@ function CountUp({ value }: { value: string }) {
   const [display, setDisplay] = useState(reduced ? value : "");
 
   // Split into prefix + number + suffix so non-numeric values render verbatim.
-  const match = value.match(/^([^\d]*)([\d.,]+)(.*)$/);
+  // useMemo keeps the reference stable so the animation effect isn't restarted
+  // on every render caused by setDisplay calls inside onUpdate.
+  const match = useMemo(
+    () => value.match(/^([^\d]*)([\d.,]+)(.*)$/),
+    [value],
+  );
 
   useEffect(() => {
     if (reduced || !inView || !match) {

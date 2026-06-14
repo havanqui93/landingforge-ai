@@ -19,6 +19,7 @@ function toAdminPage(
   slug: string,
   config: LandingConfig,
   source: AdminPage["source"],
+  deletable: boolean,
 ): AdminPage {
   return {
     slug,
@@ -29,6 +30,7 @@ function toAdminPage(
     category: "product",
     sections: config.sections.map((s) => s.type),
     createdAt: extractDate(slug),
+    deletable,
   };
 }
 
@@ -39,11 +41,11 @@ async function getAllAdminPages(): Promise<AdminPage[]> {
   const storedPages: AdminPage[] = stored
     .filter((config) => !seen.has(config.meta.slug))
     .map((config) =>
-      toAdminPage(config.meta.slug, config, detectSource(config.meta.slug)),
+      toAdminPage(config.meta.slug, config, detectSource(config.meta.slug), true),
     );
 
   const registryPages: AdminPage[] = landings.map(({ slug, config }) =>
-    toAdminPage(slug, config, "manual"),
+    toAdminPage(slug, config, "manual", false),
   );
 
   return [...storedPages, ...registryPages];

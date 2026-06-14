@@ -26,9 +26,21 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const config = await resolveLanding(params.slug);
   if (!config) return {};
+  const { title, description } = config.meta;
   return {
-    title: config.meta.title,
-    description: config.meta.description,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "LandingForge",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 

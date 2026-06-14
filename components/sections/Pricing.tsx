@@ -23,7 +23,7 @@ export function Pricing({ data }: { data: PricingSection }) {
   const cols = tierColsClass[data.tiers.length] ?? "lg:grid-cols-3";
 
   return (
-    <SectionShell>
+    <SectionShell id="pricing">
       <Container>
         <SectionHeading
           eyebrow={data.eyebrow}

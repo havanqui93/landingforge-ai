@@ -102,6 +102,24 @@ export async function getStoredLandings(): Promise<LandingConfig[]> {
   return configs.filter((c): c is LandingConfig => Boolean(c));
 }
 
+export async function deleteStoredLanding(slug: string): Promise<void> {
+  if (hasKvStore()) {
+    await kv.del(landingKey(slug));
+    await kv.zrem(INDEX_KEY, slug);
+    return;
+  }
+
+  if (hasLocalStore()) {
+    const store = await readLocalStore();
+    delete store.landings[slug];
+    store.index = store.index.filter((s) => s !== slug);
+    await writeLocalStore(store);
+    return;
+  }
+
+  throw new Error("KV store is not configured");
+}
+
 export async function storedLandingExists(slug: string): Promise<boolean> {
   if (hasKvStore()) {
     return (await kv.exists(landingKey(slug))) === 1;
@@ -137,6 +155,10 @@ async function readLocalStore(): Promise<LocalStore> {
   } catch (err) {
     const code = err instanceof Error && "code" in err ? err.code : undefined;
     if (code === "ENOENT") {
+      return { index: [], landings: {} };
+    }
+    if (err instanceof SyntaxError) {
+      console.error("[store] Local store is corrupted, resetting:", err.message);
       return { index: [], landings: {} };
     }
     throw err;

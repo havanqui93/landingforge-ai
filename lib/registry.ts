@@ -14,6 +14,9 @@ import type { LandingConfig } from "./landing.types";
 import demo from "@/landings/demo/config";
 import photonicAi20260606 from "@/landings/2026-06-06-photonic-ai/config";
 import vang from "@/landings/vang/config";
+import nexus from "@/landings/nexus/config";
+import bloom from "@/landings/bloom/config";
+import orbit from "@/landings/orbit/config";
 
 export interface RegistryEntry {
   slug: string;
@@ -24,6 +27,9 @@ export const landings: RegistryEntry[] = [
   { slug: demo.meta.slug, config: demo },
   { slug: photonicAi20260606.meta.slug, config: photonicAi20260606 },
   { slug: vang.meta.slug, config: vang },
+  { slug: nexus.meta.slug, config: nexus },
+  { slug: bloom.meta.slug, config: bloom },
+  { slug: orbit.meta.slug, config: orbit },
   // 👇 add new landings here, e.g.  { slug: acme.meta.slug, config: acme },
 ];
 
