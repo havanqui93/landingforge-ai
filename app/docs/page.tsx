@@ -22,8 +22,8 @@ export default function DocsPage() {
         <code className="rounded bg-surface/60 px-1.5 py-0.5 font-mono text-sm">
           CLAUDE.md
         </code>{" "}
-        file in the repository for architecture notes and the "add a landing"
-        contract.
+        file in the repository for architecture notes and the &ldquo;add a
+        landing&rdquo; contract.
       </p>
 
       <div className="mt-10 space-y-6 leading-relaxed text-muted">

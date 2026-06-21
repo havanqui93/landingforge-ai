@@ -55,7 +55,7 @@ export default function TermsPage() {
             No warranties
           </h2>
           <p>
-            LandingForge is provided "as is" without warranty of any kind. We make
+            LandingForge is provided &ldquo;as is&rdquo; without warranty of any kind. We make
             no guarantees of availability, accuracy, or fitness for a particular
             purpose.
           </p>
