@@ -22,6 +22,11 @@ import stillpoint from "@/landings/stillpoint/config";
 import ledgerly from "@/landings/ledgerly/config";
 import cortex from "@/landings/cortex/config";
 import roastline from "@/landings/roastline/config";
+import wavelength from "@/landings/wavelength/config";
+import coastline from "@/landings/coastline/config";
+import lumenAcademy from "@/landings/lumen-academy/config";
+import hearth from "@/landings/hearth/config";
+import dispatch from "@/landings/dispatch/config";
 
 export interface RegistryEntry {
   slug: string;
@@ -40,6 +45,11 @@ export const landings: RegistryEntry[] = [
   { slug: ledgerly.meta.slug, config: ledgerly },
   { slug: cortex.meta.slug, config: cortex },
   { slug: roastline.meta.slug, config: roastline },
+  { slug: wavelength.meta.slug, config: wavelength },
+  { slug: coastline.meta.slug, config: coastline },
+  { slug: lumenAcademy.meta.slug, config: lumenAcademy },
+  { slug: hearth.meta.slug, config: hearth },
+  { slug: dispatch.meta.slug, config: dispatch },
   // 👇 add new landings here, e.g.  { slug: acme.meta.slug, config: acme },
 ];
 
