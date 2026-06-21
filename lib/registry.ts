@@ -17,6 +17,16 @@ import vang from "@/landings/vang/config";
 import nexus from "@/landings/nexus/config";
 import bloom from "@/landings/bloom/config";
 import orbit from "@/landings/orbit/config";
+import pulsewave from "@/landings/pulsewave/config";
+import stillpoint from "@/landings/stillpoint/config";
+import ledgerly from "@/landings/ledgerly/config";
+import cortex from "@/landings/cortex/config";
+import roastline from "@/landings/roastline/config";
+import wavelength from "@/landings/wavelength/config";
+import coastline from "@/landings/coastline/config";
+import lumenAcademy from "@/landings/lumen-academy/config";
+import hearth from "@/landings/hearth/config";
+import dispatch from "@/landings/dispatch/config";
 
 export interface RegistryEntry {
   slug: string;
@@ -30,6 +40,16 @@ export const landings: RegistryEntry[] = [
   { slug: nexus.meta.slug, config: nexus },
   { slug: bloom.meta.slug, config: bloom },
   { slug: orbit.meta.slug, config: orbit },
+  { slug: pulsewave.meta.slug, config: pulsewave },
+  { slug: stillpoint.meta.slug, config: stillpoint },
+  { slug: ledgerly.meta.slug, config: ledgerly },
+  { slug: cortex.meta.slug, config: cortex },
+  { slug: roastline.meta.slug, config: roastline },
+  { slug: wavelength.meta.slug, config: wavelength },
+  { slug: coastline.meta.slug, config: coastline },
+  { slug: lumenAcademy.meta.slug, config: lumenAcademy },
+  { slug: hearth.meta.slug, config: hearth },
+  { slug: dispatch.meta.slug, config: dispatch },
   // 👇 add new landings here, e.g.  { slug: acme.meta.slug, config: acme },
 ];
 
