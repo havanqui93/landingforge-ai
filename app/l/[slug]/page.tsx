@@ -32,7 +32,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const url = absoluteUrl(`/l/${config.meta.slug}`);
   return {
     metadataBase: new URL(siteUrl()),
-    title,
+    // Landings own their full <title> — opt out of the root layout's template.
+    title: { absolute: title },
     description,
     alternates: { canonical: url },
     openGraph: {

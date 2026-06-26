@@ -28,6 +28,8 @@ export function FAQ({ data }: { data: FAQSection }) {
         <StaggerGroup className="mx-auto mt-14 max-w-2xl space-y-3">
           {data.items.map((item, i) => {
             const isOpen = open === i;
+            const panelId = `faq-panel-${i}`;
+            const buttonId = `faq-button-${i}`;
             return (
               <motion.div
                 key={item.question}
@@ -37,8 +39,10 @@ export function FAQ({ data }: { data: FAQSection }) {
                 <h3>
                   <button
                     type="button"
+                    id={buttonId}
                     onClick={() => setOpen(isOpen ? null : i)}
                     aria-expanded={isOpen}
+                    aria-controls={panelId}
                     className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
                   >
                     <span className="font-semibold">{item.question}</span>
@@ -55,6 +59,9 @@ export function FAQ({ data }: { data: FAQSection }) {
                   {isOpen ? (
                     <motion.div
                       key="content"
+                      id={panelId}
+                      role="region"
+                      aria-labelledby={buttonId}
                       initial={reduced ? false : { height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={reduced ? undefined : { height: 0, opacity: 0 }}

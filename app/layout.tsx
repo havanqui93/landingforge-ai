@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { siteUrl } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,10 +16,31 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const title = "LandingForge — many landings, one project";
+const description =
+  "A config-driven platform for hosting many independent, premium landing pages.";
+
 export const metadata: Metadata = {
-  title: "LandingForge — many landings, one project",
-  description:
-    "A config-driven platform for hosting many independent, premium landing pages.",
+  metadataBase: new URL(siteUrl()),
+  title: {
+    default: title,
+    // Landing pages set their own <title>; this frames everything else.
+    template: "%s · LandingForge",
+  },
+  description,
+  applicationName: "LandingForge",
+  openGraph: {
+    type: "website",
+    siteName: "LandingForge",
+    title,
+    description,
+  },
+  twitter: { card: "summary_large_image", title, description },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#09090f",
+  colorScheme: "dark light",
 };
 
 export default function RootLayout({
