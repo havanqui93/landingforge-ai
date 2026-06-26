@@ -91,6 +91,20 @@ export interface FeaturesSection {
   columns?: 2 | 3 | 4;
 }
 
+export interface LogoItem {
+  /** Brand/customer name shown in the strip. */
+  name: string;
+  /** Optional Lucide icon rendered beside the name. */
+  icon?: IconName;
+}
+
+export interface LogosSection {
+  type: "logos";
+  /** Small heading above the strip, e.g. "Trusted by teams at". */
+  title?: string;
+  items: LogoItem[];
+}
+
 export interface StatItem {
   value: string;
   label: string;
@@ -183,6 +197,7 @@ export interface FooterSection {
 export type Section =
   | HeroSection
   | FeaturesSection
+  | LogosSection
   | StatsSection
   | TestimonialsSection
   | PricingSection

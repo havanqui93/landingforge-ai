@@ -22,6 +22,7 @@ import type { Section, SectionType } from "@/lib/landing.types";
 const SECTION_TYPES: SectionType[] = [
   "hero",
   "features",
+  "logos",
   "stats",
   "testimonials",
   "pricing",
@@ -48,7 +49,11 @@ function pascal(name: string): string {
 }
 
 function iconNames(section: Section): string[] {
-  return section.type === "features" ? section.items.map((i) => i.icon) : [];
+  if (section.type === "features") return section.items.map((i) => i.icon);
+  if (section.type === "logos") {
+    return section.items.flatMap((i) => (i.icon ? [i.icon] : []));
+  }
+  return [];
 }
 
 /** Relative luminance of an "R G B" triple (WCAG 2.x). */

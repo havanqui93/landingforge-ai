@@ -74,7 +74,7 @@ components/
   LandingRenderer.tsx   # exhaustive switch on section.type → section component
   ThemeProvider.tsx     # injects the landing's palette as CSS variables (--lf-*)
   primitives.tsx        # Container, Reveal, StaggerGroup, Button, headings
-  sections/             # Hero, Features, Stats, Testimonials, Pricing, FAQ, CTA, Footer
+  sections/             # Hero, Features, Logos, Stats, Testimonials, Pricing, FAQ, CTA, Footer
 landings/
   <slug>/config.ts      # the typed content object for that landing (the source of truth)
   <slug>/page.tsx       # thin renderer (optional, co-located)

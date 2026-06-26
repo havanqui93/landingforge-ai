@@ -73,6 +73,16 @@ const featuresSection = z.object({
   columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
 });
 
+const logosSection = z.object({
+  type: z.literal("logos"),
+  title: z.string().optional(),
+  items: z
+    .array(
+      z.object({ name: z.string().min(1), icon: z.string().min(1).optional() }),
+    )
+    .min(1),
+});
+
 const statsSection = z.object({
   type: z.literal("stats"),
   title: z.string().optional(),
@@ -158,6 +168,7 @@ const footerSection = z.object({
 export const sectionSchema = z.discriminatedUnion("type", [
   heroSection,
   featuresSection,
+  logosSection,
   statsSection,
   testimonialsSection,
   pricingSection,
