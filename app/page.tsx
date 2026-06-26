@@ -7,11 +7,19 @@ import { HomeNav } from "@/components/HomeNav";
 import { HomeGenerateCard } from "@/components/HomeGenerateCard";
 import { landings, type RegistryEntry } from "@/lib/registry";
 import { getStoredLandings } from "@/lib/store";
+import { siteJsonLd } from "@/lib/structured-data";
+import { absoluteUrl } from "@/lib/site";
+
+const homeTitle = "LandingForge — many landings, one project";
+const homeDescription =
+  "A config-driven platform for hosting many independent, premium landing pages.";
 
 export const metadata: Metadata = {
-  title: "LandingForge — many landings, one project",
-  description:
-    "A config-driven platform for hosting many independent, premium landing pages.",
+  // Absolute so the root layout's "%s · LandingForge" template doesn't double
+  // the brand on the homepage.
+  title: { absolute: homeTitle },
+  description: homeDescription,
+  alternates: { canonical: absoluteUrl("/") },
 };
 
 export const dynamic = "force-dynamic";
@@ -30,9 +38,15 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ background: "#080814" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(siteJsonLd(homeTitle, homeDescription)),
+        }}
+      />
       <HomeNav />
 
-      <main>
+      <main id="main-content">
         {/* Hero */}
         <section className="relative overflow-hidden pb-20 pt-[112px]">
           {/* Radial glow */}

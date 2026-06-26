@@ -149,10 +149,14 @@ next build.
 
 1. Add a `*Section` interface to `lib/landing.types.ts` and include it in the
    `Section` union.
-2. Build `components/sections/MySection.tsx` (use `Reveal` / `StaggerGroup`
+2. Mirror it in the Zod union in `lib/landing.schema.ts` (runtime validation of
+   AI output; a lockstep test enforces this).
+3. Build `components/sections/MySection.tsx` (use `Reveal` / `StaggerGroup`
    from `primitives.tsx` for consistent, reduced-motion-safe animations).
-3. Add a `case "my-section":` to `LandingRenderer`. TypeScript will remind you
+4. Add a `case "my-section":` to `LandingRenderer`. TypeScript will remind you
    if you forget.
+5. Update the section-type lists in `tests/registry.test.ts` and
+   `tests/landing-schema.test.ts` so the structural checks stay exhaustive.
 
 ## Theming
 

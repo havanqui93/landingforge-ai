@@ -56,7 +56,7 @@ export function LandingRenderer({ config }: { config: LandingConfig }) {
     <LandingErrorBoundary>
       <ThemeProvider theme={config.theme}>
         <LandingNav brand={brand} />
-        <main>{config.sections.map(renderSection)}</main>
+        <main id="main-content">{config.sections.map(renderSection)}</main>
       </ThemeProvider>
     </LandingErrorBoundary>
   );

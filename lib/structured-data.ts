@@ -37,3 +37,14 @@ export function landingJsonLd(config: LandingConfig): Record<string, unknown> {
 
   return { "@context": "https://schema.org", "@graph": graph };
 }
+
+/** Site-level WebSite node for the homepage. */
+export function siteJsonLd(name: string, description: string): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name,
+    description,
+    url: absoluteUrl("/"),
+  };
+}

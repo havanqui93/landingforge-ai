@@ -162,10 +162,16 @@ Every push to `main` and every PR runs `.github/workflows/ci.yml`, which execute
 
 1. Add a `*Section` interface to `lib/landing.types.ts` and include it in the
    `Section` union.
-2. Build `components/sections/MySection.tsx` using `Reveal` / `StaggerGroup`
+2. Add the matching variant to the Zod union in `lib/landing.schema.ts` (this
+   gates AI-generated configs at runtime; the lockstep test fails if you skip it).
+3. Build `components/sections/MySection.tsx` using `Reveal` / `StaggerGroup`
    from `primitives.tsx` (keeps motion consistent and reduced-motion-safe).
-3. Add a `case "my-section":` to `LandingRenderer`. Typecheck will fail until
+4. Add a `case "my-section":` to `LandingRenderer`. Typecheck will fail until
    you do — that's the safety net.
+5. Extend `SECTION_TYPES` (`tests/registry.test.ts`) and
+   `CANONICAL_SECTION_TYPES` (`tests/landing-schema.test.ts`) so the exhaustive
+   and lockstep checks stay green. If the section carries icons, also pull them
+   into the test's `iconNames()` so they're validated.
 
 ## Daily automation (the core workflow)
 

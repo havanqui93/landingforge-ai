@@ -4,7 +4,23 @@
  * the malformed AI output it exists to catch.
  */
 import { describe, it, expect } from "vitest";
-import { landingConfigSchema, rgbTriple } from "@/lib/landing.schema";
+import { landingConfigSchema, rgbTriple, sectionSchema } from "@/lib/landing.schema";
+
+// The one canonical set of section types. Keep in lockstep with the
+// `Section` union (landing.types.ts), the renderer switch, and the registry
+// test's SECTION_TYPES list. The lockstep test below fails if the Zod union
+// drifts from this.
+const CANONICAL_SECTION_TYPES = [
+  "cta",
+  "faq",
+  "features",
+  "footer",
+  "hero",
+  "logos",
+  "pricing",
+  "stats",
+  "testimonials",
+].sort();
 
 const valid = {
   meta: { slug: "ok", title: "Title", description: "Desc" },
@@ -52,6 +68,13 @@ describe("landingConfigSchema rejects malformed configs", () => {
     expect(landingConfigSchema.safeParse({ ...valid, sections: [] }).success).toBe(
       false,
     );
+  });
+
+  it("Zod discriminated union covers exactly the canonical section types", () => {
+    const literals = sectionSchema.options
+      .map((opt) => opt.shape.type.value as string)
+      .sort();
+    expect(literals).toEqual(CANONICAL_SECTION_TYPES);
   });
 
   it("rejects a features section with no items", () => {
