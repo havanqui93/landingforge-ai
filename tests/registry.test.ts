@@ -15,6 +15,7 @@
 import { describe, it, expect } from "vitest";
 import { icons } from "lucide-react";
 import { landings } from "@/lib/registry";
+import { landingConfigSchema } from "@/lib/landing.schema";
 import type { Section, SectionType } from "@/lib/landing.types";
 
 /** Section `type` values the renderer knows how to draw. */
@@ -48,6 +49,23 @@ function pascal(name: string): string {
 
 function iconNames(section: Section): string[] {
   return section.type === "features" ? section.items.map((i) => i.icon) : [];
+}
+
+/** Relative luminance of an "R G B" triple (WCAG 2.x). */
+function luminance(triple: string): number {
+  const [r, g, b] = triple.split(" ").map((n) => {
+    const c = Number(n) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio between two "R G B" triples (1–21). */
+function contrast(a: string, b: string): number {
+  const l1 = luminance(a);
+  const l2 = luminance(b);
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
 }
 
 describe("landing registry", () => {
@@ -122,6 +140,33 @@ describe.each(landings)("landing: $slug", ({ config }) => {
         Object.prototype.hasOwnProperty.call(icons, resolved),
         `icon "${name}" → "${resolved}" is not a Lucide icon`,
       ).toBe(true);
+    }
+  });
+
+  it("validates against the runtime LandingConfig schema", () => {
+    const result = landingConfigSchema.safeParse(config);
+    expect(
+      result.success,
+      result.success ? "" : JSON.stringify(result.error.issues, null, 2),
+    ).toBe(true);
+  });
+
+  // Legibility floor: body text must clear WCAG AA (4.5:1); muted/secondary
+  // text must clear the 3:1 large-text/UI threshold. A theme that fails here
+  // ships an unreadable page.
+  it("theme text meets WCAG contrast thresholds", () => {
+    const { bg, fg, muted, surface } = theme;
+    if (fg) {
+      expect(contrast(fg, bg), `fg on bg`).toBeGreaterThanOrEqual(4.5);
+    }
+    if (muted) {
+      expect(contrast(muted, bg), `muted on bg`).toBeGreaterThanOrEqual(3);
+      if (surface) {
+        expect(
+          contrast(muted, surface),
+          `muted on surface`,
+        ).toBeGreaterThanOrEqual(3);
+      }
     }
   });
 });

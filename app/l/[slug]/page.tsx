@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { LandingRenderer } from "@/components/LandingRenderer";
 import { getLanding, getAllSlugs } from "@/lib/registry";
 import { getStoredLanding } from "@/lib/store";
+import { landingJsonLd } from "@/lib/structured-data";
+import { absoluteUrl, siteUrl } from "@/lib/site";
 import type { LandingConfig } from "@/lib/landing.types";
 
 interface Params {
@@ -27,12 +29,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const config = await resolveLanding(params.slug);
   if (!config) return {};
   const { title, description } = config.meta;
+  const url = absoluteUrl(`/l/${config.meta.slug}`);
   return {
+    metadataBase: new URL(siteUrl()),
     title,
     description,
+    alternates: { canonical: url },
     openGraph: {
       title,
       description,
+      url,
       type: "website",
       siteName: "LandingForge",
     },
@@ -47,5 +53,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function LandingPage({ params }: Params) {
   const config = await resolveLanding(params.slug);
   if (!config) notFound();
-  return <LandingRenderer config={config} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(landingJsonLd(config)) }}
+      />
+      <LandingRenderer config={config} />
+    </>
+  );
 }

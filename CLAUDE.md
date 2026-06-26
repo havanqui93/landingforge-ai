@@ -81,6 +81,9 @@ landings/
 lib/
   # --- System A (LandingForge) ---
   landing.types.ts      # LandingConfig + discriminated-union Section types
+  landing.schema.ts     # runtime Zod mirror of LandingConfig (gates AI output)
+  site.ts               # canonical base-URL helper (sitemap/robots/canonical)
+  structured-data.ts    # JSON-LD (WebPage + FAQPage) for a landing
   motion.ts             # shared variants: fadeUp, reveal, stagger, parallax
   registry.ts           # the list of all landings (powers / and /l/[slug])
   icons.ts              # resolve a Lucide icon by string name

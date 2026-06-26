@@ -12,6 +12,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LandingConfig } from "./landing.types";
 import { generateLanding } from "./generate-landing";
+import { safeParseLandingConfig } from "./landing.schema";
 
 /* -------------------------------------------------------------------------- */
 /*  Tool schema — mirrors LandingConfig as a JSON Schema for Claude tool_use  */
@@ -397,13 +398,27 @@ Analyze the keyword, determine the most appropriate product type and section str
       .replace(/^-+|-+$/g, "")
       .slice(0, 40);
 
-    return {
+    const candidate = {
       ...raw,
       meta: {
         ...raw.meta,
         slug: `${dateISO}-${baseSlug}`,
       },
     };
+
+    // Gate Claude's output through the runtime schema. A hallucinated/missing
+    // field would otherwise only surface as a broken render, so reject it and
+    // fall back to the deterministic generator.
+    const parsed = safeParseLandingConfig(candidate);
+    if (!parsed.success) {
+      console.error(
+        "[ai-generate-landing] Claude output failed schema validation, using fallback:",
+        parsed.error.issues,
+      );
+      return generateLanding({ title: keyword, points: 0 }, { dateISO });
+    }
+
+    return parsed.data;
   } catch (err) {
     console.error("[ai-generate-landing] Claude failed, using fallback:", err);
     return generateLanding({ title: keyword, points: 0 }, { dateISO });
