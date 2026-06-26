@@ -53,7 +53,7 @@ const hearth: LandingConfig = {
       columns: 3,
       items: [
         {
-          icon: "Home",
+          icon: "House",
           title: "Everything in one app",
           description:
             "Lights, locks, cameras, climate, and media from any brand, finally controlled in a single place.",

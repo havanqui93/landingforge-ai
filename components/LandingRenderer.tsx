@@ -3,6 +3,7 @@ import { LandingErrorBoundary } from "@/components/LandingErrorBoundary";
 import { LandingNav } from "@/components/sections/LandingNav";
 import { Hero } from "@/components/sections/Hero";
 import { Features } from "@/components/sections/Features";
+import { Logos } from "@/components/sections/Logos";
 import { Stats } from "@/components/sections/Stats";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Pricing } from "@/components/sections/Pricing";
@@ -22,6 +23,8 @@ function renderSection(section: Section, index: number) {
       return <Hero key={index} data={section} />;
     case "features":
       return <Features key={index} data={section} />;
+    case "logos":
+      return <Logos key={index} data={section} />;
     case "stats":
       return <Stats key={index} data={section} />;
     case "testimonials":
@@ -53,7 +56,7 @@ export function LandingRenderer({ config }: { config: LandingConfig }) {
     <LandingErrorBoundary>
       <ThemeProvider theme={config.theme}>
         <LandingNav brand={brand} />
-        <main>{config.sections.map(renderSection)}</main>
+        <main id="main-content">{config.sections.map(renderSection)}</main>
       </ThemeProvider>
     </LandingErrorBoundary>
   );

@@ -65,7 +65,7 @@ const roastline: LandingConfig = {
             "Direct-trade relationships with 38 farms mean traceable beans and fairer pay for growers.",
         },
         {
-          icon: "Sliders",
+          icon: "SlidersHorizontal",
           title: "Dial in your taste",
           description:
             "Tell us how you brew and how bold you like it — we match you to the perfect roast every cycle.",

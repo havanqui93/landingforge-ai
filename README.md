@@ -26,8 +26,17 @@ npm run dev      # http://localhost:3000
 
 ```bash
 npm run typecheck   # strict TS, exhaustive section renderer
+npm test            # vitest — registry/structural validation (CI gate)
 npm run build       # static pre-render of every registered landing
 ```
+
+CI (`.github/workflows/ci.yml`) runs `typecheck → lint → test → build` on every
+push and PR. `npm test` enforces the invariants the type system can't:
+hero-first/footer-last ordering, unique URL-safe slugs, `R G B` color triples,
+real Lucide icons, runtime-schema validity, and WCAG text contrast.
+
+SEO is built in: `app/sitemap.ts`, `app/robots.ts`, per-landing canonical/OG
+metadata, and JSON-LD (`WebPage` + `FAQPage`) on every `/l/[slug]`.
 
 ## Deploy & daily automation
 
@@ -46,15 +55,18 @@ components/
   LandingRenderer.tsx   # switch on section.type → section component (exhaustive)
   ThemeProvider.tsx     # injects the landing's palette as CSS variables
   primitives.tsx        # Container, Reveal, StaggerGroup, Button, headings
-  sections/             # Hero, Features, Stats, Testimonials, Pricing, FAQ, CTA, Footer
+  sections/             # Hero, Features, Logos, Stats, Testimonials, Pricing, FAQ, CTA, Footer
 landings/
   <slug>/config.ts      # the typed content object for that landing
   <slug>/page.tsx       # thin renderer (co-located, optional)
 lib/
   landing.types.ts      # LandingConfig + discriminated-union Section types
+  landing.schema.ts     # runtime Zod mirror of LandingConfig (gates AI output)
   motion.ts             # shared variants: fadeUp, reveal, stagger, parallax
   registry.ts           # the list of all landings (powers / and /l/[slug])
   icons.ts              # resolve a Lucide icon by string name
+  site.ts               # canonical base-URL helper (sitemap/robots/canonical)
+  structured-data.ts    # JSON-LD (WebPage + FAQPage) for a landing
 ```
 
 A landing is just data:
@@ -137,10 +149,14 @@ next build.
 
 1. Add a `*Section` interface to `lib/landing.types.ts` and include it in the
    `Section` union.
-2. Build `components/sections/MySection.tsx` (use `Reveal` / `StaggerGroup`
+2. Mirror it in the Zod union in `lib/landing.schema.ts` (runtime validation of
+   AI output; a lockstep test enforces this).
+3. Build `components/sections/MySection.tsx` (use `Reveal` / `StaggerGroup`
    from `primitives.tsx` for consistent, reduced-motion-safe animations).
-3. Add a `case "my-section":` to `LandingRenderer`. TypeScript will remind you
+4. Add a `case "my-section":` to `LandingRenderer`. TypeScript will remind you
    if you forget.
+5. Update the section-type lists in `tests/registry.test.ts` and
+   `tests/landing-schema.test.ts` so the structural checks stay exhaustive.
 
 ## Theming
 

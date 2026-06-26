@@ -12,6 +12,28 @@ Adding a landing never requires touching an existing one.
 The headline use case for this repo: **a scheduled agent generates a brand-new,
 news-themed landing page every morning** (see "Daily automation" below).
 
+### Two subsystems live in this repo
+
+The repo has grown to host **two related but independent** content systems.
+Know which one you're touching:
+
+- **System A — LandingForge (the core, documented in detail below).** Typed
+  `LandingConfig` objects → file-based registry → `/l/[slug]`. Static + Vercel
+  KV. This is what the "add a landing" contract, the tests, and the build all
+  govern. **When in doubt, this is the system to use.**
+- **System B — TrendPage AI (DB-backed SEO pages).** A separate, Prisma/Postgres
+  product for SEO landing pages keyed on trends/keywords. It uses a *different*
+  content model (`types/landing-page.ts` → `GeneratedLandingPage`, persisted in
+  the `LandingPage.contentJson` column), its own generator (`lib/ai.ts`,
+  OpenAI-based with a deterministic fallback), an admin dashboard
+  (`app/admin/*`, `app/trendpage/*`), and public routes at `/trends/[slug]`.
+  The `app/login` + `app/register` pages are **mock UI only — there is no real
+  auth backend** (the login handler literally simulates success). Do not assume
+  routes are protected.
+
+The two systems do not share a content type. Don't cross `LandingConfig`
+(System A) with `GeneratedLandingPage` (System B).
+
 ## Tech stack
 
 - Next.js 14 (App Router), TypeScript (strict)
@@ -24,14 +46,23 @@ news-themed landing page every morning** (see "Daily automation" below).
 ```bash
 npm install        # install deps
 npm run dev        # local dev → http://localhost:3000
-npm run typecheck  # strict tsc --noEmit (also enforces exhaustive section renderer)
-npm run build      # static pre-render of every registered landing
-npm run lint       # eslint
+npm run typecheck  # prisma generate + strict tsc --noEmit (enforces exhaustive renderer)
+npm run build      # prisma generate + static pre-render of every registered landing
+npm run lint       # eslint (next lint)
+npm test           # vitest run — registry/structural validation (see below)
+npm run db:push    # push the Prisma schema to DATABASE_URL (System B)
+npm run db:studio  # open Prisma Studio
 ```
 
-**Always run `npm run typecheck` (and ideally `npm run build`) after generating
-or editing a landing.** The section renderer's `switch` has a `never` branch, so
-typecheck is the contract that proves a config is valid and complete.
+> Note: `typecheck` and `build` run `prisma generate` first, so they need the
+> Prisma engines (downloaded on first `npm install`). `npm test` does **not**
+> touch Prisma or the DB — it only imports the `LandingConfig` registry.
+
+**Always run `npm run typecheck`, `npm test`, and ideally `npm run build` after
+generating or editing a landing.** The section renderer's `switch` has a `never`
+branch, so typecheck is the contract that proves a config is valid and complete;
+`npm test` adds the structural checks the type system can't express (see
+"Quality gates" below).
 
 ## Architecture map
 
@@ -43,15 +74,37 @@ components/
   LandingRenderer.tsx   # exhaustive switch on section.type → section component
   ThemeProvider.tsx     # injects the landing's palette as CSS variables (--lf-*)
   primitives.tsx        # Container, Reveal, StaggerGroup, Button, headings
-  sections/             # Hero, Features, Stats, Testimonials, Pricing, FAQ, CTA, Footer
+  sections/             # Hero, Features, Logos, Stats, Testimonials, Pricing, FAQ, CTA, Footer
 landings/
   <slug>/config.ts      # the typed content object for that landing (the source of truth)
   <slug>/page.tsx       # thin renderer (optional, co-located)
 lib/
+  # --- System A (LandingForge) ---
   landing.types.ts      # LandingConfig + discriminated-union Section types
+  landing.schema.ts     # runtime Zod mirror of LandingConfig (gates AI output)
+  site.ts               # canonical base-URL helper (sitemap/robots/canonical)
+  structured-data.ts    # JSON-LD (WebPage + FAQPage) for a landing
   motion.ts             # shared variants: fadeUp, reveal, stagger, parallax
   registry.ts           # the list of all landings (powers / and /l/[slug])
   icons.ts              # resolve a Lucide icon by string name
+  generate-landing.ts   # deterministic templated generator (daily cron)
+  ai-generate-landing.ts# optional Claude generator (claude-sonnet-4-6) → LandingConfig
+  store.ts              # Vercel KV read/write for generated landings
+  news.ts               # top non-sensitive Hacker News story (daily cron)
+  # --- System B (TrendPage AI) ---
+  prisma.ts             # shared PrismaClient singleton
+  ai.ts                 # OpenAI SEO-page generator → GeneratedLandingPage (deterministic fallback)
+  validators.ts         # Zod input schemas for the API routes
+  api.ts                # ok()/fail()/handleError() JSON helpers
+  slug.ts               # slugify() + DB-unique slug helper
+types/
+  landing-page.ts       # GeneratedLandingPage (System B content model)
+app/
+  admin/, trendpage/    # System B dashboards (generate / pages / settings / schedule)
+  trends/[slug]/        # System B public SEO page route
+  api/                  # generate-page, generate-from-keyword, pages/*, cron/*, trending
+tests/
+  registry.test.ts      # vitest structural validation of every LandingConfig
 ```
 
 A landing is **just data**:
@@ -91,21 +144,47 @@ interface LandingConfig {
   a known-good dark example.
 - **Never edit other landings.** Each landing is independent by design.
 
+## Quality gates (CI)
+
+Every push to `main` and every PR runs `.github/workflows/ci.yml`, which executes
+`typecheck → lint → test → build`. Keep all four green.
+
+- **`npm test`** (`tests/registry.test.ts`, Vitest) validates structural
+  invariants the type system can't express: slugs are unique, URL-safe, and match
+  their config; each landing **opens with a hero and closes with a footer**; theme
+  colors are `"R G B"` triples; and every feature icon resolves to a **real Lucide
+  icon** (no silent `Sparkles` fallback — that check catches renamed icons like
+  the old `Home` → `House`). Adding a landing that violates these fails CI fast.
+- When you add a new section `type`, extend the `SECTION_TYPES` list in the test
+  so the "known section types" check stays exhaustive.
+
 ## Adding a new section type (only if genuinely needed)
 
 1. Add a `*Section` interface to `lib/landing.types.ts` and include it in the
    `Section` union.
-2. Build `components/sections/MySection.tsx` using `Reveal` / `StaggerGroup`
+2. Add the matching variant to the Zod union in `lib/landing.schema.ts` (this
+   gates AI-generated configs at runtime; the lockstep test fails if you skip it).
+3. Build `components/sections/MySection.tsx` using `Reveal` / `StaggerGroup`
    from `primitives.tsx` (keeps motion consistent and reduced-motion-safe).
-3. Add a `case "my-section":` to `LandingRenderer`. Typecheck will fail until
+4. Add a `case "my-section":` to `LandingRenderer`. Typecheck will fail until
    you do — that's the safety net.
+5. Extend `SECTION_TYPES` (`tests/registry.test.ts`) and
+   `CANONICAL_SECTION_TYPES` (`tests/landing-schema.test.ts`) so the exhaustive
+   and lockstep checks stay green. If the section carries icons, also pull them
+   into the test's `iconNames()` so they're validated.
 
 ## Daily automation (the core workflow)
 
 Every morning a **Vercel Cron** job generates a fresh, news-themed landing
-page. There is no LLM and no GitHub commit in the loop — it's fully
-Vercel-native. Because serverless functions can't write files into the deployed
-bundle, generated landings are stored in **Vercel KV** and rendered
+page. There is no GitHub commit in the loop — it's fully Vercel-native. The
+generator is **deterministic by default** (`lib/generate-landing.ts`); when
+`ANTHROPIC_API_KEY` is set, `lib/ai-generate-landing.ts` can instead ask Claude
+(`claude-sonnet-4-6`) to author a richer `LandingConfig`, **falling back to the
+deterministic generator** whenever the key is missing or the call fails — so the
+job always produces a result. (Note: System B's `/api/generate-*` routes use a
+separate OpenAI-based generator, `lib/ai.ts`.) Because serverless functions
+can't write files into the deployed bundle, generated landings are stored in
+**Vercel KV** and rendered
 dynamically, *alongside* the static, file-based landings in `lib/registry.ts`.
 
 Moving parts:

@@ -53,9 +53,19 @@ const SENSITIVE = [
   "refugee",
 ];
 
-function isSensitive(title: string): boolean {
-  const lower = title.toLowerCase();
-  return SENSITIVE.some((word) => lower.includes(word));
+/**
+ * Match each blocklist term at a word boundary (start of a word), so inflections
+ * are still caught ("kill" → "killed", "attack" → "attacks") without the naive
+ * substring false positives that flagged benign words ("software" → "war",
+ * "award", "swarm", "skill").
+ */
+const SENSITIVE_RE = new RegExp(
+  `\\b(?:${SENSITIVE.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+  "i",
+);
+
+export function isSensitive(title: string): boolean {
+  return SENSITIVE_RE.test(title);
 }
 
 interface AlgoliaHit {

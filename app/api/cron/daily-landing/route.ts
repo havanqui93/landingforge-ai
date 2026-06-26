@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { fetchTopStory } from "@/lib/news";
 import { generateLandingFromKeyword } from "@/lib/ai-generate-landing";
+import { getLanding } from "@/lib/registry";
+import { safeParseLandingConfig } from "@/lib/landing.schema";
 import {
   isStoreEnabled,
   saveStoredLanding,
@@ -53,18 +55,31 @@ export async function GET(request: Request): Promise<NextResponse> {
     const dateISO = new Date().toISOString().slice(0, 10);
     let config = await generateLandingFromKeyword(story.title, dateISO);
 
-    // Avoid clobbering an existing slug if the job runs more than once a day.
-    if (await storedLandingExists(config.meta.slug)) {
+    // Never shadow a static registry slug (the registry wins in resolveLanding,
+    // which would make the stored landing unreachable) and don't clobber an
+    // existing stored slug if the job runs more than once a day.
+    const collides = async (slug: string) =>
+      Boolean(getLanding(slug)) || (await storedLandingExists(slug));
+
+    if (await collides(config.meta.slug)) {
+      const suffix = Date.now().toString(36).slice(-4);
       config = {
         ...config,
-        meta: {
-          ...config.meta,
-          slug: `${config.meta.slug}-${Date.now().toString(36).slice(-4)}`,
-        },
+        meta: { ...config.meta, slug: `${config.meta.slug}-${suffix}` },
       };
     }
 
-    await saveStoredLanding(config);
+    // Belt-and-suspenders: validate the final config before it reaches KV so a
+    // malformed generator output can never persist as a broken page.
+    const parsed = safeParseLandingConfig(config);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Generated config failed validation", issues: parsed.error.issues },
+        { status: 500 },
+      );
+    }
+
+    await saveStoredLanding(parsed.data);
 
     return NextResponse.json({
       ok: true,
