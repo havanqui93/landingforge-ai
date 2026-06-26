@@ -77,7 +77,7 @@ const demo: LandingConfig = {
             "Semantic HTML, visible focus states, and full prefers-reduced-motion support.",
         },
         {
-          icon: "Wand2",
+          icon: "WandSparkles",
           title: "Delightful motion",
           description:
             "Scroll-triggered reveals, staggered entrances, and parallax that feels effortless.",
