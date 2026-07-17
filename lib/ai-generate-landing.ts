@@ -360,7 +360,7 @@ export async function generateLandingFromKeyword(
 
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       tools: [
