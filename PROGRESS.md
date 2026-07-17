@@ -1,51 +1,33 @@
-# PROGRESS
+# Project Progress Log
 
-Working log for autonomous development on LandingForge. Read this first each
-session. See `CLAUDE.md` for architecture and the "add a landing" contract.
+## Status
+Last updated: 2026-07-17
+Current focus: Correctness of the daily-automation pipeline + establishing a test safety net
 
-## Current state (2026-07-17)
+## Completed
+- [x] fix(news): match sensitive-keyword blocklist on word boundaries instead of substrings — 2026-07-17
+- [x] feat(ai): upgrade keyword→LandingConfig generator from claude-sonnet-4-6 to claude-sonnet-5 — 2026-07-17
+- [x] test: add vitest suite (slug, isSensitive, generateLanding) + `npm test` / `test:watch` — 2026-07-17
 
-- `npm run typecheck`, `npm run lint`, `npm run build`, and `npm test` all pass.
-- **Test suite now exists** (vitest, node-only): `npm test` / `npm run test:watch`.
-  Covers `lib/slug.ts`, `lib/news.ts` (isSensitive), and
-  `lib/generate-landing.ts`. 20 tests. Config in `vitest.config.ts` (`@/` alias).
-- 16 static landings registered in `lib/registry.ts`; daily automation
-  (Vercel Cron → HN → generator → KV store) intact.
+## In Progress
+- [ ] <none — session ended at a clean stopping point>
 
-## Completed this session
+## Backlog (prioritized)
+1. Validate AI-generated configs at runtime — `ai-generate-landing.ts` casts `toolUse.input as LandingConfig` with no schema check; add a zod schema and fall back to `generateLanding()` on invalid output.
+2. Add CI workflow (`.github/workflows/ci.yml`) running typecheck + lint + test + build on PRs.
+3. Consolidate the two `slugify` implementations (`lib/slug.ts` and `lib/generate-landing.ts`).
+4. Make `fetchTopStory` selection logic testable (extract pure filter/sort or inject `fetch`).
+5. Test `uniqueSlug` with a prisma mock.
+6. Add blocklist variants ("killings", "deadly", …) if they surface in generated pages now that matching is stricter.
 
-- **fix(news):** `isSensitive` now matches the blocklist on **word boundaries**
-  instead of substrings. Previously "war" matched software/hardware/warehouse,
-  "hack" matched hackathon/Hacker News, "dead" matched deadline — over-filtering
-  a large share of legitimate HN tech stories (the core daily-automation input).
-  `isSensitive` is now exported and unit-tested.
-- **feat(ai):** upgraded the keyword→LandingConfig generator in
-  `lib/ai-generate-landing.ts` from `claude-sonnet-4-6` to `claude-sonnet-5`
-  (latest Sonnet; no request-shape changes needed — no sampling params set).
-- **test:** added the vitest suite described above (no test infra existed).
+## Known Issues / Tech Debt
+- Daily automation needs Vercel KV env vars (`KV_REST_API_URL`, `KV_REST_API_TOKEN`) in production and `ANTHROPIC_API_KEY` for the AI generator; both degrade gracefully when absent (local store / deterministic fallback), so the pipeline can't be tested end-to-end without those credentials.
+- Two separate `slugify` implementations exist (see backlog #3).
+- AI-generated `LandingConfig` is unvalidated at runtime (see backlog #1); only `LandingErrorBoundary` guards a malformed page.
 
-## Backlog (next sessions — roughly impact/effort ordered)
-
-1. **Validate AI-generated configs at runtime.** `ai-generate-landing.ts` does
-   `toolUse.input as LandingConfig` with no schema check. A malformed tool
-   output could render a broken page (only `LandingErrorBoundary` guards it).
-   Add a zod schema for `LandingConfig`/`Section` and fall back to
-   `generateLanding()` when the AI output fails validation. (Medium)
-2. **CI workflow.** Add `.github/workflows/ci.yml` running typecheck + lint +
-   test + build on PRs. (Low effort, high safety.)
-3. **Consolidate the two `slugify` implementations.** `lib/slug.ts` and
-   `lib/generate-landing.ts` each define their own; unify to one. (Low)
-4. **Test `fetchTopStory` selection logic.** Currently untestable (does a live
-   `fetch`). Extract the pure candidate-filter/sort into a testable function
-   and/or inject `fetch`. (Low–Medium)
-5. **Test `uniqueSlug`** (needs a prisma mock). (Low)
-6. **Blocklist variants.** With stricter word-boundary matching, a few variants
-   slip through (e.g. "killings", "deadly"). Add them if they surface in
-   generated pages. (Low)
-
-## Known issues / blockers
-
-- Daily automation requires Vercel KV env vars (`KV_REST_API_URL`,
-  `KV_REST_API_TOKEN`) in production and `ANTHROPIC_API_KEY` for the AI
-  generator; both degrade gracefully when absent (local store / deterministic
-  fallback). Not testable end-to-end without those credentials.
+## Session Notes
+Baseline was green (typecheck/lint/build passed) but had no test suite and no progress log. Picked 3 items by impact/effort:
+- The `isSensitive` substring bug was the highest-value find: "war" matched software/hardware/warehouse, "hack" matched hackathon/Hacker News, "dead" matched deadline — silently filtering out most legitimate HN tech stories, which are the core input to the daily generator. Fixed with a word-boundary regex; exported the function so it's unit-testable.
+- Confirmed `claude-sonnet-4-6` was a *valid* model (not a bug), but upgraded to `claude-sonnet-5` per the "default to latest models" guidance; safe because the request sets no sampling params (Sonnet 5's breaking changes don't apply).
+- Chose vitest for the test suite (fast, node-only, TS-native); tests cover only pure/deterministic logic to stay credential-free and offline. `vitest.config.ts` mirrors the `@/` path alias so tests import like the app.
+All changes verified with `npm test` (20 passing), typecheck, lint, and build. Each item is its own commit; branch `claude/autonomous-dev-session-bzjvzi` is pushed. No PR opened (not requested).
