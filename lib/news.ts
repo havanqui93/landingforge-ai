@@ -53,9 +53,25 @@ const SENSITIVE = [
   "refugee",
 ];
 
-function isSensitive(title: string): boolean {
-  const lower = title.toLowerCase();
-  return SENSITIVE.some((word) => lower.includes(word));
+/** Escape regex metacharacters so blocklist entries match literally. */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Whole-word matcher for the blocklist. Substring matching (the old approach)
+ * wrongly flagged benign tech stories — "war" matched "software"/"hardware",
+ * "hack" matched "hackathon" (and Hacker News itself), "dead" matched
+ * "deadline". Word boundaries keep the intent (block "war", "hack", "dead")
+ * without swallowing unrelated words that merely contain those letters.
+ */
+const SENSITIVE_PATTERN = new RegExp(
+  `\\b(?:${SENSITIVE.map(escapeRegExp).join("|")})\\b`,
+  "i",
+);
+
+export function isSensitive(title: string): boolean {
+  return SENSITIVE_PATTERN.test(title);
 }
 
 interface AlgoliaHit {
