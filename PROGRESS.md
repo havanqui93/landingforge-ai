@@ -13,24 +13,28 @@ Current focus: Correctness of the daily-automation pipeline + establishing a tes
 - [x] refactor: consolidate two slugify implementations — generate-landing now reuses lib/slug.ts — 2026-07-18
 - [x] feat(news): extract selectTopStory as a pure testable function; expand blocklist with inflected variants — 2026-07-18
 - [x] test: add uniqueSlug tests with a vitest Prisma mock — 2026-07-18
+- [x] feat(schema): validate RGB triple format in color fields; reject hex/rgb()/out-of-range — 2026-07-18
+- [x] test: isolate local store in tests (LANDINGFORGE_LOCAL_STORE=0) + include app/**/*.test.ts — 2026-07-18
+- [x] test: add cron route smoke tests (12 cases, all deps mocked, CI-safe) — 2026-07-18
 
 ## In Progress
-- [ ] <none — all backlog items cleared>
+- [ ] <none — session ended at a clean stopping point>
 
 ## Backlog (prioritized)
-1. End-to-end smoke test for the cron route (`/api/cron/daily-landing`) — mock fetch + KV + Prisma to exercise the full pipeline in CI.
-2. Add `generateStaticParams` to `app/l/[slug]/page.tsx` if KV-backed landings need SSG; currently they're dynamic (request-time KV read).
-3. Rate-limit or deduplicate the cron job — if it fires more than once a day (e.g. multiple Vercel deployments), the same slug could be written twice. Add a KV existence check before generating.
+1. Test the index page (`app/page.tsx`) — verify that it merges registry + store landings and renders one card per landing, using mocked `getStoredLandings`.
+2. Add `NEXT_PUBLIC_BASE_URL` awareness to generated page metadata (og:url, canonical) — currently missing from `generateMetadata` in `app/l/[slug]/page.tsx`.
+3. Widen the CI matrix: add Node 18 alongside Node 20 to catch any compatibility regressions in the cron route (uses the global `Request` API, new in Node 18).
+4. Consider adding a `--reporter=verbose` flag to `npm test` in CI so failed tests print full diffs in GitHub Actions logs.
 
 ## Known Issues / Tech Debt
-- Daily automation needs Vercel KV env vars (`KV_REST_API_URL`, `KV_REST_API_TOKEN`) in production and `ANTHROPIC_API_KEY` for the AI generator; both degrade gracefully when absent, so the pipeline can't be tested end-to-end without those credentials.
-- CI build step pre-renders static landings and confirms the type system is valid but can't exercise KV or AI paths.
+- Daily automation requires Vercel KV env vars in production; degrades gracefully when absent.
+- CI can't exercise the KV or AI paths (no credentials). Smoke tests mock both; end-to-end requires Vercel.
 
 ## Session Notes
-Second session on 2026-07-18. Resumed from 30 passing tests. Cleared the remaining 3 backlog items:
+Third session on 2026-07-18. Resumed from 43 tests passing. Noted that backlog items #2 (generateStaticParams) and #3 (deduplication) were already implemented in the codebase — removed from backlog. Picked 3 items:
 
-- **selectTopStory extraction** — the filter/sort logic in `fetchTopStory` was previously untestable because it was tangled with `fetch`. Extracted as `selectTopStory(hits: AlgoliaHit[])` (exported). `fetchTopStory` is now a thin wrapper: fetch → parse → delegate. 8 new tests cover null hits, missing URL, sensitive filtering, points sorting, null-points handling, and result shape.
-- **Blocklist expansion** — word-boundary matching was correct but the list was missing inflected forms: "deaths", "deadly", "kills", "killed", "killing", "killings", "murders", "murdered", "bombing", "attacks". Added all of them. 3 new tests verify the new variants are caught.
-- **uniqueSlug Prisma mock** — used `vi.mock("@/lib/prisma", ...)` to replace the Prisma client with a `vi.fn()`. 5 tests: free base, single collision (-2), multi-collision (-3), ignoreId short-circuit, empty-string fallback to "page".
+- **RGB triple validation** — upgraded `landingConfigSchema`'s theme color fields from `z.string()` to a composable `rgbTriple` validator (regex + per-channel 0-255 range). The existing try/catch in `ai-generate-landing.ts` promotes a ZodError to a deterministic fallback, so misconfigured LLM colors never reach KV or the renderer. Added 4 rejection tests.
+- **Store isolation + app test include** — `vitest.config.ts` now sets `LANDINGFORGE_LOCAL_STORE=0` globally (prevents accidental local store reads/writes in any test) and adds `"app/**/*.test.ts"` to the include glob so route smoke tests can live next to their handlers.
+- **Cron route smoke test** — 12 tests covering auth guard (4 cases), store-disabled 503, no-story 502, happy-path response shape + call assertions, slug collision deduplication (2 cases), and unexpected-error 500. All network/store/AI deps are mocked; runs fully offline in CI.
 
-Result: 43 tests passing (up from 30). Typecheck and lint clean. Two commits pushed to `claude/autonomous-dev-session-bzjvzi`. Backlog replaced with 3 new forward-looking items.
+Result: 59 tests passing (up from 43), typecheck and lint clean. Three commits pushed.
