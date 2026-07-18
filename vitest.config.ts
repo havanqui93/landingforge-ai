@@ -8,8 +8,9 @@ export default defineConfig({
     },
   },
   test: {
-    // Only run our unit tests; keep the suite fast and node-only.
-    include: ["lib/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
     environment: "node",
+    // Prevent tests from reading or writing the local JSON store.
+    env: { LANDINGFORGE_LOCAL_STORE: "0" },
   },
 });
