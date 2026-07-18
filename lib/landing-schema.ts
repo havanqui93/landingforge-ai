@@ -2,6 +2,24 @@ import { z } from "zod";
 import type { LandingConfig } from "./landing.types";
 
 /* -------------------------------------------------------------------------- */
+/*  Color validator                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Validates a Tailwind-compatible color value: space-separated "R G B" triple
+ * where each channel is a decimal integer in 0-255.
+ * Rejects hex (#ff0000), rgb() notation, and out-of-range values so that
+ * Tailwind opacity modifiers (bg-primary/15) work correctly at runtime.
+ */
+const rgbTriple = z
+  .string()
+  .regex(/^\d{1,3} \d{1,3} \d{1,3}$/, 'Expected "R G B" triple, e.g. "124 92 255"')
+  .refine(
+    (s) => s.split(" ").map(Number).every((n) => n >= 0 && n <= 255),
+    { message: "Each RGB channel must be in the 0-255 range" },
+  );
+
+/* -------------------------------------------------------------------------- */
 /*  Shared primitives                                                          */
 /* -------------------------------------------------------------------------- */
 
@@ -131,14 +149,14 @@ export const landingConfigSchema = z.object({
     description: z.string(),
   }),
   theme: z.object({
-    primary: z.string(),
-    bg: z.string(),
+    primary: rgbTriple,
+    bg: rgbTriple,
     mode: z.enum(["light", "dark"]),
-    primaryFg: z.string().optional(),
-    surface: z.string().optional(),
-    fg: z.string().optional(),
-    muted: z.string().optional(),
-    border: z.string().optional(),
+    primaryFg: rgbTriple.optional(),
+    surface: rgbTriple.optional(),
+    fg: rgbTriple.optional(),
+    muted: rgbTriple.optional(),
+    border: rgbTriple.optional(),
     font: z.string().optional(),
     radius: z.string().optional(),
   }),

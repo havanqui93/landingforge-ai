@@ -105,6 +105,26 @@ describe("landingConfigSchema — invalid input", () => {
     const config = { ...VALID_CONFIG, theme: themeWithoutPrimary };
     expect(landingConfigSchema.safeParse(config).success).toBe(false);
   });
+
+  it("rejects a hex color string", () => {
+    const config = { ...VALID_CONFIG, theme: { ...VALID_CONFIG.theme, primary: "#7c5cff" } };
+    expect(landingConfigSchema.safeParse(config).success).toBe(false);
+  });
+
+  it("rejects rgb() function notation", () => {
+    const config = { ...VALID_CONFIG, theme: { ...VALID_CONFIG.theme, primary: "rgb(124, 92, 255)" } };
+    expect(landingConfigSchema.safeParse(config).success).toBe(false);
+  });
+
+  it("rejects out-of-range channel values", () => {
+    const config = { ...VALID_CONFIG, theme: { ...VALID_CONFIG.theme, bg: "300 0 0" } };
+    expect(landingConfigSchema.safeParse(config).success).toBe(false);
+  });
+
+  it("rejects an invalid optional color field", () => {
+    const config = { ...VALID_CONFIG, theme: { ...VALID_CONFIG.theme, surface: "hsl(240 5% 10%)" } };
+    expect(landingConfigSchema.safeParse(config).success).toBe(false);
+  });
 });
 
 /* -------------------------------------------------------------------------- */
