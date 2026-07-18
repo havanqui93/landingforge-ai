@@ -18,18 +18,31 @@ const FRONT_PAGE =
 
 /** Lowercase substrings that mark a story as too sensitive/tragic to theme. */
 const SENSITIVE = [
+  // death / fatality variants
   "death",
+  "deaths",
   "dead",
+  "deadly",
   "dies",
   "died",
+  // kill variants
   "kill",
+  "kills",
+  "killed",
+  "killing",
+  "killings",
+  // violence
   "murder",
+  "murders",
+  "murdered",
   "suicide",
   "war",
   "attack",
+  "attacks",
   "shooting",
   "shoot",
   "bomb",
+  "bombing",
   "terror",
   "crash",
   "disaster",
@@ -53,15 +66,48 @@ const SENSITIVE = [
   "refugee",
 ];
 
-function isSensitive(title: string): boolean {
-  const lower = title.toLowerCase();
-  return SENSITIVE.some((word) => lower.includes(word));
+/** Escape regex metacharacters so blocklist entries match literally. */
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-interface AlgoliaHit {
+/**
+ * Whole-word matcher for the blocklist. Substring matching (the old approach)
+ * wrongly flagged benign tech stories — "war" matched "software"/"hardware",
+ * "hack" matched "hackathon" (and Hacker News itself), "dead" matched
+ * "deadline". Word boundaries keep the intent (block "war", "hack", "dead")
+ * without swallowing unrelated words that merely contain those letters.
+ */
+const SENSITIVE_PATTERN = new RegExp(
+  `\\b(?:${SENSITIVE.map(escapeRegExp).join("|")})\\b`,
+  "i",
+);
+
+export function isSensitive(title: string): boolean {
+  return SENSITIVE_PATTERN.test(title);
+}
+
+export interface AlgoliaHit {
   title: string | null;
   url: string | null;
   points: number | null;
+}
+
+/**
+ * Pure selection logic: filter, sanitise, sort, and return the top story from
+ * a list of raw Algolia hits. Extracted from fetchTopStory so it can be unit-
+ * tested without network access.
+ */
+export function selectTopStory(hits: AlgoliaHit[]): NewsItem | null {
+  const candidates = hits
+    .filter((h): h is { title: string; url: string; points: number } =>
+      Boolean(h.title && h.url),
+    )
+    .map((h) => ({ title: h.title, url: h.url, points: h.points ?? 0 }))
+    .filter((h) => !isSensitive(h.title))
+    .sort((a, b) => b.points - a.points);
+
+  return candidates[0] ?? null;
 }
 
 /**
@@ -77,13 +123,5 @@ export async function fetchTopStory(): Promise<NewsItem | null> {
   if (!res.ok) throw new Error(`HN fetch failed: ${res.status}`);
 
   const data = (await res.json()) as { hits?: AlgoliaHit[] };
-  const candidates = (data.hits ?? [])
-    .filter((h): h is { title: string; url: string; points: number } =>
-      Boolean(h.title && h.url),
-    )
-    .map((h) => ({ title: h.title, url: h.url, points: h.points ?? 0 }))
-    .filter((h) => !isSensitive(h.title))
-    .sort((a, b) => b.points - a.points);
-
-  return candidates[0] ?? null;
+  return selectTopStory(data.hits ?? []);
 }

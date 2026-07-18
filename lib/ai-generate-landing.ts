@@ -12,6 +12,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { LandingConfig } from "./landing.types";
 import { generateLanding } from "./generate-landing";
+import { parseLandingConfig } from "./landing-schema";
 
 /* -------------------------------------------------------------------------- */
 /*  Tool schema — mirrors LandingConfig as a JSON Schema for Claude tool_use  */
@@ -360,7 +361,7 @@ export async function generateLandingFromKeyword(
 
   try {
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       tools: [
@@ -388,7 +389,7 @@ Analyze the keyword, determine the most appropriate product type and section str
       throw new Error("Claude did not call the expected tool");
     }
 
-    const raw = toolUse.input as LandingConfig;
+    const raw = parseLandingConfig(toolUse.input);
 
     // Prefix slug with the date and sanitize it
     const baseSlug = (raw.meta?.slug ?? keyword)
