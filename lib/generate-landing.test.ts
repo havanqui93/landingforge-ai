@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateLanding, slugify } from "@/lib/generate-landing";
+import { generateLanding } from "@/lib/generate-landing";
 import type { NewsItem } from "@/lib/news";
 import type { SectionType } from "@/lib/landing.types";
 
@@ -21,17 +21,6 @@ const story: NewsItem = {
   url: "https://example.com/story",
   points: 200,
 };
-
-describe("slugify (generator)", () => {
-  it("produces a url-safe slug", () => {
-    expect(slugify("Hello, World! 2026")).toBe("hello-world-2026");
-  });
-
-  it("caps length at 40 chars", () => {
-    const long = "a".repeat(100);
-    expect(slugify(long).length).toBeLessThanOrEqual(40);
-  });
-});
 
 describe("generateLanding", () => {
   it("is deterministic for the same title + date", () => {

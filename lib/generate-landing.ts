@@ -14,6 +14,7 @@ import type {
   Section,
 } from "./landing.types";
 import type { NewsItem } from "./news";
+import { slugify } from "./slug";
 
 /* -------------------------------------------------------------------------- */
 /*  Deterministic helpers                                                      */
@@ -36,14 +37,6 @@ function pick<T>(arr: readonly T[], seed: number): T {
 
 function titleCase(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-}
-
-export function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 40);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -167,7 +160,7 @@ export function generateLanding(
   const name = productName(words, seed);
   const theme = buildTheme(seed);
 
-  const slug = `${dateISO}-${slugify(name + "-" + (words[0] ?? "daily"))}`;
+  const slug = `${dateISO}-${slugify(name + "-" + (words[0] ?? "daily")).slice(0, 40)}`;
   const fill = (s: string) => s.replace(/\{name\}/g, name).replace(/\{topic\}/g, topic);
 
   const heroActions: CTAButton[] = [
