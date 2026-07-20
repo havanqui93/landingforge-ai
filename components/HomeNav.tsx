@@ -74,6 +74,12 @@ export function HomeNav() {
                 {label}
               </a>
             ))}
+            <Link
+              href="/e"
+              className="rounded-lg px-3 py-1.5 text-[14px] text-muted transition hover:bg-white/[0.04] hover:text-fg"
+            >
+              Editorial
+            </Link>
           </div>
 
           {/* Right actions — desktop */}
@@ -201,6 +207,13 @@ export function HomeNav() {
                 {label}
               </a>
             ))}
+            <Link
+              href="/e"
+              className="rounded-xl px-4 py-3 text-[15px] text-fg transition hover:bg-surface"
+              onClick={() => setMobileOpen(false)}
+            >
+              Editorial
+            </Link>
             <div className="my-2 h-px bg-border" />
             {loggedIn ? (
               <>
